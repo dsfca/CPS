@@ -4,4 +4,18 @@
   <artifactId>CPS</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>project</name>
+  
+  <dependencies>
+   
+   		<dependency>
+    		<groupId>org.bouncycastle</groupId>
+    		<artifactId>bcprov-jdk15on</artifactId>
+    		<version>1.66</version>
+		</dependency>
+   
+   </dependencies>
+   
+   <build>
+   
+   </build>
 </project>
