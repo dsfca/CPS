@@ -45,7 +45,7 @@ public class SigMAuthentication {
 	 * - return array of byte.
 	 * 
 	 * ************************************************************************************/
-	public static byte[] MAC(SecretKey Kmac, String message) throws Exception {
+	public static byte[] MAC(Key Kmac, String message) throws Exception {
 		MessageDigest sha256 = MessageDigest.getInstance(DIGEST_ALG); 
 		byte[] messageCiphered = AESProvider.AESCipherDecipher(Kmac, message.getBytes(), Cipher.ENCRYPT_MODE);
 		byte[] messageMac = sha256.digest(messageCiphered);
@@ -89,7 +89,7 @@ public class SigMAuthentication {
 	 * - return boolean(true or false)
 	 * 
 	 * ************************************************************************************/
-	public static boolean MVF(SecretKey kmac, String message, byte[] mac) throws Exception {
+	public static boolean MVF(Key kmac, String message, byte[] mac) throws Exception {
 		byte[] messageMAC = MAC(kmac, message);
 		String oppenentMacStr = new String(mac);
 		String messageMacStr = new String(messageMAC);
@@ -114,5 +114,23 @@ public class SigMAuthentication {
 		byte[] macipherPass = sha256.digest(cipherPass);
 		SecretKeySpec key = new SecretKeySpec(macipherPass, SYMMETRIC_CYPHER_ALGO);
 		return key;
+	}
+	
+	/**************************************************************************************
+	 * 											-generateKmac()
+	 * - 
+	 * 
+	 * input:
+	 * 			sk: 
+	 * 			alicePubkey: 
+	 * 			bobPubKey:
+	 * 
+	 * - return the generated key.
+	 * 
+	 * ************************************************************************************/
+	public static Key generateKmac(SecretKey sk, PublicKey alicePubkey, PublicKey bobPubKey) throws Exception {
+		String t = "(" + alicePubkey.hashCode() + "," + bobPubKey.hashCode() +")";
+		String sid = "MAC||"+ t;
+		return KeyDerivationFunction(sk, sid);
 	}
 }
