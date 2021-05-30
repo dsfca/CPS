@@ -5,13 +5,24 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.Key;
+import java.security.PublicKey;
 
 import org.ini4j.InvalidFileFormatException;
 
+import crypto.DiffieHelman;
 import general.IniManager;
 
 public class Alice extends Thread{
-	
+	private static final String ALICE_PRIVATE_KEY_PATH = "";
+	private static final String ALICE_ID = "A";
+	private DiffieHelman DH;
+	private String Ra;
+	private String Rb;
+	private String t;
+	private Key Kmac;
+	private Key k;
+	/*******************************************************************************************************************************************/
 	private IniManager ini;
 	private int client_port;
 	
@@ -27,6 +38,7 @@ public class Alice extends Thread{
 		this.bobSocket = (Socket) new Socket(ini.getBobHost(), ini.getBobServerPort());
 		this.bobObjectOutputStream = new ObjectOutputStream(bobSocket.getOutputStream());
 		this.bobObjectInputStream = new ObjectInputStream(bobSocket.getInputStream());
+		this.DH = new DiffieHelman();
 	}
 	
 	
@@ -41,20 +53,27 @@ public class Alice extends Thread{
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
-	public void keyEncapsulationK() throws IOException, ClassNotFoundException {
+	public void keyEncapsulationK() throws Exception {
+		byte[] p = this.DH.getP().toByteArray();
+		byte[] g = this.DH.getG().toByteArray();
+		byte[] myDHPubKey = this.DH.getPublicKey().getEncoded();
 		//CREATE OBJECT AND THEN SEND TO BOB
-		Object [] object = {"..."};
+		Object [] object = {p, g, myDHPubKey};
 		this.bobObjectOutputStream.writeObject(object);
 		//RECEIVE FROM BOB
-		Object [] received = (Object[]) this.bobObjectInputStream.readObject();
-		//(...)
+		byte [] received = (byte[]) this.bobObjectInputStream.readObject();
+		PublicKey BobPubKey = DiffieHelman.generatePublicKey(received);
+		this.k = this.DH.agreeSecretKey(BobPubKey, true);
 	}
 
 	public void sigMAauthentication() {
-
+		
 	}
 
 	public static void main(String[] args) {
