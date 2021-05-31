@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Random;
 
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
 import org.ini4j.InvalidFileFormatException;
 
@@ -55,8 +56,14 @@ public class Bob extends Thread {
 
 			//RECEIVE g, p AND key
 			keyEncapsulationK(ObjectOutputStream, ObjectInputStream);
-			sigMAauthentication(ObjectOutputStream, ObjectInputStream);
+			Key first_key = sigMAauthentication(ObjectOutputStream, ObjectInputStream);
 			
+			keyEncapsulationK(ObjectOutputStream, ObjectInputStream);
+			Key second_key = sigMAauthentication(ObjectOutputStream, ObjectInputStream);
+			
+			byte [] final_array = xorWithKey(first_key.getEncoded(), second_key.getEncoded());
+			Key k = new SecretKeySpec(final_array, "AES");
+			System.out.println(k);
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
@@ -82,7 +89,8 @@ public class Bob extends Thread {
 		System.out.println("BOB: Diffie-Hellman key exchange completed");
 	}
 	
-	public void sigMAauthentication(ObjectOutputStream oos, ObjectInputStream ois) throws Exception {
+	public Key sigMAauthentication(ObjectOutputStream oos, ObjectInputStream ois) throws Exception {
+		Key K = null;
 		Ra = new String((byte[]) ois.readObject(), StandardCharsets.UTF_8); ;
 		Rb = binNumber();
 		String message = "0"+ this.t + Ra + Rb;
@@ -107,12 +115,13 @@ public class Bob extends Thread {
 			if(SigMAuthentication.MVF(this.Kmac, message, Amac)) {
 				
 				String sid = "(" + t + "," + Ra + "," + Rb + "," + aliceID + "," + BOB_ID + ")";
-				Key K = SigMAuthentication.KeyDerivationFunction(this.secKey, "KE" + sid);
+				K = SigMAuthentication.KeyDerivationFunction(this.secKey, "KE" + sid);
 				System.out.println("BOB: Successful authentication key exchange");
 				System.out.println("BOB: agreed key: " + new String(K.getEncoded()));
 			
 			}else throw new Exception("Alice's mac didn't hold");	
 		}else throw new Exception("Alice's signature didn't hold");
+		return K;
 	}
 	
 	public  String binNumber() {
@@ -120,6 +129,14 @@ public class Bob extends Thread {
 	    int n = rg.nextInt(10);
 	    return Integer.toBinaryString(n);
 	}
+	
+	private byte[] xorWithKey(byte[] a, byte[] key) {
+        byte[] out = new byte[a.length];
+        for (int i = 0; i < a.length; i++) {
+            out[i] = (byte) (a[i] ^ key[i%key.length]);
+        }
+        return out;
+    }
 
 	public static void main(String[] args) {
 
