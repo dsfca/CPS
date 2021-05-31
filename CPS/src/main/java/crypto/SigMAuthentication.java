@@ -10,6 +10,8 @@ import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import general.IniManager;
+
 public class SigMAuthentication {
 	private static String password = "cps";
 	private static final String DIGEST_ALG = "SHA-256";
