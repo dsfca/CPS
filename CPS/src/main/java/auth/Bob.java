@@ -16,6 +16,7 @@ import javax.crypto.SecretKey;
 import org.ini4j.InvalidFileFormatException;
 
 import crypto.DiffieHellman;
+import crypto.RSAProvider;
 import crypto.SigMAuthentication;
 import general.IniManager;
 
@@ -26,7 +27,8 @@ public class Bob extends Thread {
 	
 	private static final String BOB_ID = "B";
 	private static final String BOB_PRIVATE_KEY_PATH = "resources/" + BOB_ID + "_private.key";
-	private static final String ALICE_PUBLIC_KEY_PATH = "";
+	private static final String BOB_PUBLIC_KEY_PATH = "resources/" + BOB_ID + "_public.key";
+	private static final String ALICE_PUBLIC_KEY_PATH = "resources/" + "A" + "_public.key";
 	private DiffieHellman dh;
 	private String Ra;
 	private String Rb;
@@ -35,9 +37,10 @@ public class Bob extends Thread {
 	private SecretKey secKey;
 
 
-	public Bob() throws InvalidFileFormatException, IOException {
+	public Bob() throws Exception {
 		this.ini = new IniManager();
 		this.ssocket = new ServerSocket(ini.getBobServerPort());
+		RSAProvider.RSAKeyGenerator(BOB_PRIVATE_KEY_PATH, BOB_PUBLIC_KEY_PATH, ini.getKeystorePass());
 	}
 
 	

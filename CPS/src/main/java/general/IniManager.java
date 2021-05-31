@@ -30,6 +30,11 @@ public class IniManager {
 		return ini.get("Bob","host", String.class);
 	}
 	
+	/**General**/
+	public String getKeystorePass() {
+		return ini.get("general","password", String.class);
+	}
+	
 	
 	public static void main(String[] args) {
 

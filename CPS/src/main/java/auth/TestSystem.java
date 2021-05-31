@@ -10,11 +10,11 @@ public class TestSystem {
 		
 	}
 
-	public static void main(String[] args) throws InvalidFileFormatException, IOException {
+	public static void main(String[] args) throws Exception {
 		Bob bob = new Bob();
 		bob.start();
-		Alice alice = new Alice();
-		alice.start();
+		//Alice alice = new Alice();
+		//alice.start();
 	}
 
 }
