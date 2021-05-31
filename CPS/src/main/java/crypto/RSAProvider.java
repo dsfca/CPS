@@ -24,6 +24,8 @@ import java.util.Base64;
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
 
+import general.IniManager;
+
 
 
 public class RSAProvider {
@@ -268,28 +270,20 @@ public static void RSAKeyGenerator(String privKeyPath, String pubKeyPath, String
     	return cipherB64String;
 	}
 	
-	public static void main(String[] args) {
+	/*public static void main(String[] args) {
 		
-		/*try {
-			String pass = TrackerLocationSystem.password;
+		try {
+			IniManager ini = new IniManager();
 			//for(int i = 0; i < 10; i++) {
-				String privKeyPath = "resources/private_keys/server_private.key";
-				String pubKeyPath = "resources/public_keys/server_public.key";
-				RSAKeyGenerator(privKeyPath, pubKeyPath, pass);
+				String privKeyPath = "resources/A_private.key";
+				String pubKeyPath = "resources/A_public.key";
+				RSAKeyGenerator(privKeyPath, pubKeyPath, ini.getKeystorePass());
 				
-				KeyPair keypair = readRSAKey(pubKeyPath, privKeyPath, pass);
-				String s = "aaaaa";
-				s = Base64.getEncoder().encodeToString(s.getBytes());
-				 String cipher = priKeyCiphDeciph(s, keypair.getPrivate(), Cipher.ENCRYPT_MODE);
-				 String decString = pubKeyCiphDeciph(cipher, keypair.getPublic(), Cipher.DECRYPT_MODE);
-				 
-				 s = new String(Base64.getDecoder().decode(decString.getBytes()));
-				 System.out.println(s);
-				 
+			
 			//}
 		} catch (Exception e) {
 			e.printStackTrace();
-		}*/
-	}
+		}
+	}*/
 	
 }

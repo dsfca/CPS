@@ -18,8 +18,8 @@ import crypto.SigMAuthentication;
 import general.IniManager;
 
 public class Alice extends Thread{
-	private static final String ALICE_PRIVATE_KEY_PATH = "";
-	private static final String BOB_PUBLIC_KEY_PATH = "";
+	private static final String ALICE_PRIVATE_KEY_PATH = "resources/A_private.key";
+	private static final String BOB_PUBLIC_KEY_PATH = "resources/B_public.key";
 	private static final String ALICE_ID = "A";
 	private DiffieHellman DH;
 	private String Ra;
@@ -88,13 +88,13 @@ public class Alice extends Thread{
 		byte[] Bsigma = (byte[]) received[2];
 		byte[] BMac = (byte[]) received[3];
 		
-		String message = "0||"+ t + "||" + Ra + "||" + Rb;
+		String message = "0"+ t + "" + Ra + "" + Rb;
 		if(SigMAuthentication.SVF(BOB_PUBLIC_KEY_PATH, message, Bsigma)) {
 			message = "0||" + BobID;
 			if(SigMAuthentication.MVF(this.Kmac, message, BMac)) {
-				message = "1||"+ t + "||" + Ra + "||" + Rb;
+				message = "1"+ t + "" + Ra + "" + Rb;
 				byte[] Asig = SigMAuthentication.Sig(ALICE_PRIVATE_KEY_PATH, message);
-				message = "1||" + ALICE_ID;
+				message = "1" + ALICE_ID;
 				byte[] AMac = SigMAuthentication.MAC(Kmac, message);
 				
 				Object [] object = {ALICE_ID, Asig, AMac};
@@ -102,7 +102,7 @@ public class Alice extends Thread{
 				
 				String sid = "(" + t + "," + Ra + "," + Rb + "," + ALICE_ID + "," + BobID + ")";
 				
-				Key K= SigMAuthentication.KeyDerivationFunction(secKey, "KE||"+sid);
+				Key K= SigMAuthentication.KeyDerivationFunction(secKey, "KE"+sid);
 				
 				System.out.println("agreed key: " + new String(K.getEncoded()));
 				
