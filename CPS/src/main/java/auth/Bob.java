@@ -24,9 +24,9 @@ public class Bob extends Thread {
 	private IniManager ini;
 	private ServerSocket ssocket;
 	
-	private static final String BOB_PRIVATE_KEY_PATH = "";
-	private static final String ALICE_PUBLIC_KEY_PATH = "";
 	private static final String BOB_ID = "B";
+	private static final String BOB_PRIVATE_KEY_PATH = "resources/" + BOB_ID + "_private.key";
+	private static final String ALICE_PUBLIC_KEY_PATH = "";
 	private DiffieHellman dh;
 	private String Ra;
 	private String Rb;
@@ -79,9 +79,9 @@ public class Bob extends Thread {
 	public void sigMAauthentication(ObjectOutputStream oos, ObjectInputStream ois) throws Exception {
 		Ra = new String((byte[]) ois.readObject(), StandardCharsets.UTF_8); ;
 		Rb = binNumber();
-		String message = "0||"+ this.t + "||" + Ra + "||" + Rb;
+		String message = "0"+ this.t + Ra + Rb;
 		byte[] Bsig = SigMAuthentication.Sig(BOB_PRIVATE_KEY_PATH, message);
-		message = "0||" + BOB_ID;
+		message = "0" + BOB_ID;
 		byte[] BMac = SigMAuthentication.MAC(this.Kmac, message);
 		Object [] object = {BOB_ID, Rb, Bsig, BMac};
 		oos.writeObject(object);
@@ -93,14 +93,14 @@ public class Bob extends Thread {
 		byte [] Amac = (byte[]) object[2];
 
 		//VERIFICATION
-		message = "1||" + this.t + "||" + Ra + "||" + Rb;
+		message = "1" + this.t + Ra + Rb;
 		if(SigMAuthentication.SVF(ALICE_PUBLIC_KEY_PATH, message, Asig)) { //IF == 0 => true
-			message = "1||" + aliceID;
+			message = "1" + aliceID;
 			
 			if(SigMAuthentication.MVF(this.Kmac, message, Amac)) {
 				
 				String sid = "(" + t + "," + Ra + "," + Rb + "," + aliceID + "," + BOB_ID + ")";
-				Key K = SigMAuthentication.KeyDerivationFunction(this.secKey, "KE||" + sid);
+				Key K = SigMAuthentication.KeyDerivationFunction(this.secKey, "KE" + sid);
 				System.out.println("agreed key: " + new String(K.getEncoded()));
 			
 			}else throw new Exception("Alice's mac didn't hold");	
