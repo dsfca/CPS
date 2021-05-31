@@ -19,7 +19,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 
 
-public class DiffieHelman {
+public class DiffieHellman {
 	private static final int AES_KEY_SIZE = 128;
 	
 	private KeyPair keyPair;
@@ -27,7 +27,7 @@ public class DiffieHelman {
 	private BigInteger g;
 	
 	
-	public DiffieHelman() {
+	public DiffieHellman() {
 		try {
 			init();
 		} catch (Exception e) {
@@ -35,7 +35,7 @@ public class DiffieHelman {
 		}  
 	}
 	
-	public DiffieHelman(BigInteger p, BigInteger g) {
+	public DiffieHellman(BigInteger p, BigInteger g) {
 		try {
 			init(p,g);
 			this.p = p;

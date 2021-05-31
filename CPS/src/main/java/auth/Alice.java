@@ -13,7 +13,7 @@ import javax.crypto.SecretKey;
 
 import org.ini4j.InvalidFileFormatException;
 
-import crypto.DiffieHelman;
+import crypto.DiffieHellman;
 import crypto.SigMAuthentication;
 import general.IniManager;
 
@@ -21,7 +21,7 @@ public class Alice extends Thread{
 	private static final String ALICE_PRIVATE_KEY_PATH = "";
 	private static final String BOB_PUBLIC_KEY_PATH = "";
 	private static final String ALICE_ID = "A";
-	private DiffieHelman DH;
+	private DiffieHellman DH;
 	private String Ra;
 	private String Rb;
 	private String t;
@@ -29,7 +29,6 @@ public class Alice extends Thread{
 	private SecretKey secKey;
 	/*******************************************************************************************************************************************/
 	private IniManager ini;
-	private int client_port;
 	
 	private Socket bobSocket;
 	private ObjectOutputStream bobObjectOutputStream;
@@ -38,12 +37,11 @@ public class Alice extends Thread{
 
 	public Alice() throws InvalidFileFormatException, IOException {
 		this.ini = new IniManager();
-		this.client_port = ini.getAliceClientPort();
 		
 		this.bobSocket = (Socket) new Socket(ini.getBobHost(), ini.getBobServerPort());
 		this.bobObjectOutputStream = new ObjectOutputStream(bobSocket.getOutputStream());
 		this.bobObjectInputStream = new ObjectInputStream(bobSocket.getInputStream());
-		this.DH = new DiffieHelman();
+		this.DH = new DiffieHellman();
 	}
 	
 	
@@ -59,7 +57,6 @@ public class Alice extends Thread{
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -73,17 +70,18 @@ public class Alice extends Thread{
 		this.bobObjectOutputStream.writeObject(object);
 		//RECEIVE FROM BOB
 		byte [] received = (byte[]) this.bobObjectInputStream.readObject();
-		PublicKey BobPubKey = DiffieHelman.generatePublicKey(received);
+		PublicKey BobPubKey = DiffieHellman.generatePublicKey(received);
 		this.secKey = (SecretKey) this.DH.agreeSecretKey(BobPubKey, true);
-		 t = "(" + this.DH.getPublicKey().hashCode() + "," + BobPubKey.hashCode() +")";
+		this.t = "(" + this.DH.getPublicKey().hashCode() + "," + BobPubKey.hashCode() +")";
 		this.Kmac = SigMAuthentication.generateKmac(secKey, this.DH.getPublicKey(), BobPubKey);
+		
 	}
 	
 
 	public void sigMAauthentication() throws Exception {
 		Ra = binNumber();
 		this.bobObjectOutputStream.writeObject(Ra.getBytes());
-		
+
 		Object [] received = (Object[]) this.bobObjectInputStream.readObject();
 		String BobID = (String) received[0];
 		Rb = (String) received[1];
