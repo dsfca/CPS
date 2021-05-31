@@ -7,11 +7,13 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.security.MessageDigest;
 import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Random;
 
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
 import org.ini4j.InvalidFileFormatException;
 
@@ -25,12 +27,13 @@ public class Alice extends Thread{
 	private static final String ALICE_PUBLIC_KEY_PATH = "resources/A_public.key";
 	private static final String BOB_PUBLIC_KEY_PATH = "resources/B_public.key";
 	private static final String ALICE_ID = "A";
-	private DiffieHellman DH;
+	private DiffieHellman DH1;
+	private DiffieHellman DH2;
 	private String Ra;
 	private String Rb;
 	private String t;
 	private Key Kmac;
-	private SecretKey secKey;
+	private SecretKey Kkem;
 	/*******************************************************************************************************************************************/
 	private IniManager ini;
 	
@@ -46,7 +49,8 @@ public class Alice extends Thread{
 		this.bobObjectOutputStream = new ObjectOutputStream(bobSocket.getOutputStream());
 		this.bobObjectInputStream = new ObjectInputStream(bobSocket.getInputStream());
 		RSAProvider.RSAKeyGenerator(ALICE_PRIVATE_KEY_PATH, ALICE_PUBLIC_KEY_PATH, ini.getKeystorePass());
-		this.DH = new DiffieHellman();
+		this.DH1 = new DiffieHellman();
+		this.DH2 = new DiffieHellman();
 	}
 	
 	
@@ -67,18 +71,33 @@ public class Alice extends Thread{
 	}
 
 	public void keyEncapsulationK() throws Exception {
-		byte[] p = this.DH.getP().toByteArray();
-		byte[] g = this.DH.getG().toByteArray();
-		byte[] myDHPubKey = this.DH.getPublicKey().getEncoded();
+		byte[] p1 = this.DH1.getP().toByteArray();
+		byte[] g1 = this.DH1.getG().toByteArray();
+		byte[] myDH1PubKey = this.DH1.getPublicKey().getEncoded();
+		
+		byte[] p2 = this.DH2.getP().toByteArray();
+		byte[] g2 = this.DH2.getG().toByteArray();
+		byte[] myDH2PubKey = this.DH2.getPublicKey().getEncoded();
 		//CREATE OBJECT AND THEN SEND TO BOB
-		Object [] object = {p, g, myDHPubKey};
+		Object [] object = {p1, g1, myDH1PubKey, p2, g2, myDH2PubKey};
 		this.bobObjectOutputStream.writeObject(object);
 		//RECEIVE FROM BOB
-		byte [] received = (byte[]) this.bobObjectInputStream.readObject();
-		PublicKey BobPubKey = DiffieHellman.generatePublicKey(received);
-		this.secKey = (SecretKey) this.DH.agreeSecretKey(BobPubKey, true);
-		this.t = "(" + this.DH.getPublicKey().hashCode() + "," + BobPubKey.hashCode() +")";
-		this.Kmac = SigMAuthentication.generateKmac(secKey, this.DH.getPublicKey(), BobPubKey);
+		Object [] received = (Object[]) this.bobObjectInputStream.readObject();
+		PublicKey BobPubKey1 = DiffieHellman.generatePublicKey((byte[])received[0]);
+		PublicKey BobPubKey2 = DiffieHellman.generatePublicKey((byte[])received[1]);
+		
+		SecretKey Kkem1 = (SecretKey) this.DH1.agreeSecretKey(BobPubKey1, true);
+		SecretKey Kkem2 = (SecretKey) this.DH2.agreeSecretKey(BobPubKey2, true);
+		byte[] k1xork2 = xorWithKey(Kkem1.getEncoded(), Kkem2.getEncoded());
+		
+		
+		this.Kkem = new SecretKeySpec(k1xork2, "AES");
+		this.t = "(" + this.DH1.getPublicKey().hashCode() + "," +  BobPubKey1.hashCode() + "," + this.DH2.getPublicKey().hashCode() +"," +BobPubKey2.hashCode() +")";
+		Key kmac1 = SigMAuthentication.generateKmac(Kkem1, DH1.getPublicKey(), BobPubKey1);
+		Key kmac2 = SigMAuthentication.generateKmac(Kkem2, DH2.getPublicKey(), BobPubKey2);
+		byte[] kma1XorKmac2 = xorWithKey(kmac1.getEncoded(), kmac2.getEncoded());
+		this.Kmac  = new SecretKeySpec(kma1XorKmac2, "AES");
+		
 		System.out.println("ALICE: Diffie-Hellman key exchange completed");
 	}
 	
@@ -107,7 +126,7 @@ public class Alice extends Thread{
 				
 				String sid = "(" + t + "," + Ra + "," + Rb + "," + ALICE_ID + "," + BobID + ")";
 				
-				Key K= SigMAuthentication.KeyDerivationFunction(secKey, "KE"+sid);
+				Key K= SigMAuthentication.KeyDerivationFunction(Kkem, "KE"+sid);
 				
 				System.out.println("ALICE: Successful authentication key exchange");
 				System.out.println("ALICE: agreed key: " + new String(K.getEncoded()));
@@ -123,6 +142,14 @@ public class Alice extends Thread{
 	    return Integer.toBinaryString(n);
 	}
 
+	private byte[] xorWithKey(byte[] a, byte[] key) {
+        byte[] out = new byte[a.length];
+        for (int i = 0; i < a.length; i++) {
+            out[i] = (byte) (a[i] ^ key[i%key.length]);
+        }
+        return out;
+    }
+	
 	public static void main(String[] args) {
 
 	}
