@@ -5,8 +5,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.PublicKey;
+import java.util.Arrays;
 import java.util.Random;
 
 import javax.crypto.SecretKey;

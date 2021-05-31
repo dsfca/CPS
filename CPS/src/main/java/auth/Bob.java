@@ -9,6 +9,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.PublicKey;
+import java.util.Arrays;
 import java.util.Random;
 
 import javax.crypto.SecretKey;
@@ -83,7 +84,7 @@ public class Bob extends Thread {
 		Ra = new String((byte[]) ois.readObject(), StandardCharsets.UTF_8); ;
 		Rb = binNumber();
 		String message = "0"+ this.t + Ra + Rb;
-		System.out.println(message);
+
 		byte[] Bsig = SigMAuthentication.Sig(BOB_PRIVATE_KEY_PATH, message);
 		message = "0" + BOB_ID;
 		byte[] BMac = SigMAuthentication.MAC(this.Kmac, message);
@@ -93,8 +94,8 @@ public class Bob extends Thread {
 		//RECEIVE
 		Object [] received = (Object[]) ois.readObject();
 		String aliceID = (String) received[0];
-		byte [] Asig = (byte[]) object[1];
-		byte [] Amac = (byte[]) object[2];
+		byte [] Asig = (byte[]) received[1];
+		byte [] Amac = (byte[]) received[2];
 
 		//VERIFICATION
 		message = "1" + this.t + Ra + Rb;

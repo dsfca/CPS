@@ -159,30 +159,9 @@ public static void RSAKeyGenerator(String privKeyPath, String pubKeyPath, String
 	
 	public static byte[] unsigne(PublicKey key, byte[] singnature) throws Exception {
 		Cipher cipher = Cipher.getInstance(ASSYMMETRIC_CYPHER_ALGO);
-    	cipher.init(Cipher.ENCRYPT_MODE, key);
-    	
-    	int MAX_ENCRYPT_BLOCK = 117;
-		int offSet = 0;
-    	int inputLength = singnature.length;
-    	byte[] resultBytes = {};
-    	byte[] cache = {};
-    	
-    	while (inputLength - offSet > 0) {
-			if (inputLength - offSet > MAX_ENCRYPT_BLOCK) {
-				cache = cipher.doFinal(singnature, offSet, MAX_ENCRYPT_BLOCK);
-				offSet += MAX_ENCRYPT_BLOCK;
-			} else {
-				cache = cipher.doFinal(singnature, offSet, inputLength - offSet);
-				offSet = inputLength;
-			}
-			resultBytes = Arrays.copyOf(resultBytes, resultBytes.length + cache.length);
-			System.arraycopy(cache, 0, resultBytes, resultBytes.length - cache.length, cache.length);
-		}
-    	//result = Base64.encodeToString(resultBytes);
-    	
-    	//byte[] content = cipher.doFinal(singnature);
-    	//return content;
-    	return resultBytes;
+    	cipher.init(Cipher.DECRYPT_MODE, key);
+    	byte[] content = cipher.doFinal(singnature);
+    	return content;
 	}
 	
 	
