@@ -90,7 +90,7 @@ public class Alice extends Thread{
 		
 		String message = "0"+ t + "" + Ra + "" + Rb;
 		if(SigMAuthentication.SVF(BOB_PUBLIC_KEY_PATH, message, Bsigma)) {
-			message = "0||" + BobID;
+			message = "0" + BobID;
 			if(SigMAuthentication.MVF(this.Kmac, message, BMac)) {
 				message = "1"+ t + "" + Ra + "" + Rb;
 				byte[] Asig = SigMAuthentication.Sig(ALICE_PRIVATE_KEY_PATH, message);
