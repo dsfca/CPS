@@ -14,11 +14,13 @@ import javax.crypto.SecretKey;
 import org.ini4j.InvalidFileFormatException;
 
 import crypto.DiffieHellman;
+import crypto.RSAProvider;
 import crypto.SigMAuthentication;
 import general.IniManager;
 
 public class Alice extends Thread{
 	private static final String ALICE_PRIVATE_KEY_PATH = "resources/A_private.key";
+	private static final String ALICE_PUBLIC_KEY_PATH = "resources/A_public.key";
 	private static final String BOB_PUBLIC_KEY_PATH = "resources/B_public.key";
 	private static final String ALICE_ID = "A";
 	private DiffieHellman DH;
@@ -35,13 +37,15 @@ public class Alice extends Thread{
 	private ObjectInputStream bobObjectInputStream;
 	
 
-	public Alice() throws InvalidFileFormatException, IOException {
+	public Alice() throws Exception {
 		this.ini = new IniManager();
 		
 		this.bobSocket = (Socket) new Socket(ini.getBobHost(), ini.getBobServerPort());
 		this.bobObjectOutputStream = new ObjectOutputStream(bobSocket.getOutputStream());
 		this.bobObjectInputStream = new ObjectInputStream(bobSocket.getInputStream());
+		RSAProvider.RSAKeyGenerator(ALICE_PRIVATE_KEY_PATH, ALICE_PUBLIC_KEY_PATH, ini.getKeystorePass());
 		this.DH = new DiffieHellman();
+		
 	}
 	
 	
