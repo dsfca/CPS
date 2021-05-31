@@ -47,7 +47,6 @@ public class Alice extends Thread{
 		this.bobObjectInputStream = new ObjectInputStream(bobSocket.getInputStream());
 		RSAProvider.RSAKeyGenerator(ALICE_PRIVATE_KEY_PATH, ALICE_PUBLIC_KEY_PATH, ini.getKeystorePass());
 		this.DH = new DiffieHellman();
-		
 	}
 	
 	
@@ -80,7 +79,7 @@ public class Alice extends Thread{
 		this.secKey = (SecretKey) this.DH.agreeSecretKey(BobPubKey, true);
 		this.t = "(" + this.DH.getPublicKey().hashCode() + "," + BobPubKey.hashCode() +")";
 		this.Kmac = SigMAuthentication.generateKmac(secKey, this.DH.getPublicKey(), BobPubKey);
-		
+		System.out.println("ALICE: Diffie-Hellman key exchange completed");
 	}
 	
 
@@ -110,7 +109,8 @@ public class Alice extends Thread{
 				
 				Key K= SigMAuthentication.KeyDerivationFunction(secKey, "KE"+sid);
 				
-				System.out.println("agreed key: " + new String(K.getEncoded()));
+				System.out.println("ALICE: Successful authentication key exchange");
+				System.out.println("ALICE: agreed key: " + new String(K.getEncoded()));
 				
 			}else throw new Exception("bob mac didn't hold");
 		}else throw new Exception("bob signature didn't hold");

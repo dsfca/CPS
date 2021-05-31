@@ -67,6 +67,7 @@ public class Bob extends Thread {
 	}
 	
 	public void keyEncapsulationK(ObjectOutputStream oos, ObjectInputStream ois) throws Exception {
+		System.out.println("INIT: Alice connected to Bob");
 		Object [] object = (Object[]) ois.readObject();
 		byte[] p = (byte[]) object[0];
 		byte[] g = (byte[]) object[1];
@@ -78,6 +79,7 @@ public class Bob extends Thread {
 		this.secKey = (SecretKey) this.dh.agreeSecretKey(alicePubKey, true);
 		this.t = "(" + alicePubKey.hashCode() + "," + this.dh.getPublicKey().hashCode() +")";
 		this.Kmac = SigMAuthentication.generateKmac(secKey, alicePubKey, this.dh.getPublicKey());	
+		System.out.println("BOB: Diffie-Hellman key exchange completed");
 	}
 	
 	public void sigMAauthentication(ObjectOutputStream oos, ObjectInputStream ois) throws Exception {
@@ -106,7 +108,8 @@ public class Bob extends Thread {
 				
 				String sid = "(" + t + "," + Ra + "," + Rb + "," + aliceID + "," + BOB_ID + ")";
 				Key K = SigMAuthentication.KeyDerivationFunction(this.secKey, "KE" + sid);
-				System.out.println("agreed key: " + new String(K.getEncoded()));
+				System.out.println("BOB: Successful authentication key exchange");
+				System.out.println("BOB: agreed key: " + new String(K.getEncoded()));
 			
 			}else throw new Exception("Alice's mac didn't hold");	
 		}else throw new Exception("Alice's signature didn't hold");
