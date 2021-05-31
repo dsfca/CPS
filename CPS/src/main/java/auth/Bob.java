@@ -104,9 +104,10 @@ public class Bob extends Thread {
 		this.Kmac2 = SigMAuthentication.generateKmac(Kkem2, alicePubKey2, bob_pk2);	
 		
 		this.Kkem = new SecretKeySpec(xorWithKey(Kkem1.getEncoded(), Kkem2.getEncoded()), "AES");
-		String aux = new String(Kmac1.getEncoded(), StandardCharsets.UTF_8) + new String(Kmac2.getEncoded(), StandardCharsets.UTF_8);
-		byte [] aux2 = aux.getBytes();
-		SecretKeySpec key = new SecretKeySpec(aux2, "AES");
+		//String aux = new String(Kmac1.getEncoded(), StandardCharsets.UTF_8) + new String(Kmac2.getEncoded(), StandardCharsets.UTF_8);
+		//byte [] aux2 = aux.getBytes();
+		byte [] xor_kmac = xorWithKey(Kmac1.getEncoded(), Kmac2.getEncoded());
+		SecretKeySpec key = new SecretKeySpec(xor_kmac, "AES");
 		this.Kmac = key;
 		this.t = "(" + alicePubKey1.hashCode() + "," + bob_pk1.hashCode() + alicePubKey2.hashCode() + "," + bob_pk2.hashCode() + ")";
 		System.out.println("BOB: Diffie-Hellman key exchange completed");
