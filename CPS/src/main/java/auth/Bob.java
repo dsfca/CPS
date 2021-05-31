@@ -64,6 +64,7 @@ public class Bob extends Thread {
 			byte [] final_array = xorWithKey(first_key.getEncoded(), second_key.getEncoded());
 			Key k = new SecretKeySpec(final_array, "AES");
 			System.out.println(k);
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
