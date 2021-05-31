@@ -35,8 +35,12 @@ public class Bob extends Thread {
 	private String Ra;
 	private String Rb;
 	private String t;
+	private Key Kmac1;
+	private Key Kmac2;
 	private Key Kmac;
-	private SecretKey secKey;
+	private SecretKey Kkem1;
+	private SecretKey Kkem2;
+	private SecretKey Kkem;
 
 
 	public Bob() throws Exception {
@@ -56,14 +60,11 @@ public class Bob extends Thread {
 
 			//RECEIVE g, p AND key
 			keyEncapsulationK(ObjectOutputStream, ObjectInputStream);
-			Key first_key = sigMAauthentication(ObjectOutputStream, ObjectInputStream);
+			sigMAauthentication(ObjectOutputStream, ObjectInputStream);
 			
-			keyEncapsulationK(ObjectOutputStream, ObjectInputStream);
-			Key second_key = sigMAauthentication(ObjectOutputStream, ObjectInputStream);
-			
-			byte [] final_array = xorWithKey(first_key.getEncoded(), second_key.getEncoded());
-			Key k = new SecretKeySpec(final_array, "AES");
-			System.out.println(k);
+			//byte [] final_array = xorWithKey(first_key.getEncoded(), second_key.getEncoded());
+			//Key k = new SecretKeySpec(final_array, "AES");
+			//System.out.println(k);
 			
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -77,21 +78,41 @@ public class Bob extends Thread {
 	public void keyEncapsulationK(ObjectOutputStream oos, ObjectInputStream ois) throws Exception {
 		System.out.println("INIT: Alice connected to Bob");
 		Object [] object = (Object[]) ois.readObject();
-		byte[] p = (byte[]) object[0];
-		byte[] g = (byte[]) object[1];
-		this.dh = new DiffieHellman(new BigInteger(p), new BigInteger(g));
-		byte [] myDHPubKey = this.dh.getPublicKey().getEncoded();
-		oos.writeObject(myDHPubKey);
 		
-		PublicKey alicePubKey = DiffieHellman.generatePublicKey((byte[]) object[2]);
-		this.secKey = (SecretKey) this.dh.agreeSecretKey(alicePubKey, true);
-		this.t = "(" + alicePubKey.hashCode() + "," + this.dh.getPublicKey().hashCode() +")";
-		this.Kmac = SigMAuthentication.generateKmac(secKey, alicePubKey, this.dh.getPublicKey());	
+		//KEY 1
+		byte[] p1 = (byte[]) object[0];
+		byte[] g1 = (byte[]) object[1];
+		PublicKey alicePubKey1 = DiffieHellman.generatePublicKey((byte[]) object[2]);
+		this.dh = new DiffieHellman(new BigInteger(p1), new BigInteger(g1));
+		PublicKey bob_pk1 =  this.dh.getPublicKey();
+		byte [] myDHPubKey1 = bob_pk1.getEncoded();
+		this.Kkem1 = (SecretKey) this.dh.agreeSecretKey(alicePubKey1, true);
+		
+		//KEY 2
+		byte[] p2 = (byte[]) object[3];
+		byte[] g2 = (byte[]) object[4];
+		PublicKey alicePubKey2 = DiffieHellman.generatePublicKey((byte[]) object[5]);
+		this.dh = new DiffieHellman(new BigInteger(p2), new BigInteger(g2));
+		PublicKey bob_pk2 =  this.dh.getPublicKey();
+		byte [] myDHPubKey2 = bob_pk2.getEncoded();
+		this.Kkem2 = (SecretKey) this.dh.agreeSecretKey(alicePubKey2, true);
+
+		Object [] send = {myDHPubKey1, myDHPubKey2};
+		oos.writeObject(send);
+		
+		this.Kmac1 = SigMAuthentication.generateKmac(Kkem1, alicePubKey1, bob_pk1);	
+		this.Kmac2 = SigMAuthentication.generateKmac(Kkem2, alicePubKey2, bob_pk2);	
+		
+		this.Kkem = new SecretKeySpec(xorWithKey(Kkem1.getEncoded(), Kkem2.getEncoded()), "AES");
+		String aux = new String(Kmac1.getEncoded(), StandardCharsets.UTF_8) + new String(Kmac2.getEncoded(), StandardCharsets.UTF_8);
+		byte [] aux2 = aux.getBytes();
+		SecretKeySpec key = new SecretKeySpec(aux2, "AES");
+		this.Kmac = key;
+		this.t = "(" + alicePubKey1.hashCode() + "," + bob_pk1.hashCode() + alicePubKey2.hashCode() + "," + bob_pk2.hashCode() + ")";
 		System.out.println("BOB: Diffie-Hellman key exchange completed");
 	}
 	
-	public Key sigMAauthentication(ObjectOutputStream oos, ObjectInputStream ois) throws Exception {
-		Key K = null;
+	public void sigMAauthentication(ObjectOutputStream oos, ObjectInputStream ois) throws Exception {
 		Ra = new String((byte[]) ois.readObject(), StandardCharsets.UTF_8); ;
 		Rb = binNumber();
 		String message = "0"+ this.t + Ra + Rb;
@@ -116,13 +137,12 @@ public class Bob extends Thread {
 			if(SigMAuthentication.MVF(this.Kmac, message, Amac)) {
 				
 				String sid = "(" + t + "," + Ra + "," + Rb + "," + aliceID + "," + BOB_ID + ")";
-				K = SigMAuthentication.KeyDerivationFunction(this.secKey, "KE" + sid);
+				Key K = SigMAuthentication.KeyDerivationFunction(this.Kkem, "KE" + sid);
 				System.out.println("BOB: Successful authentication key exchange");
 				System.out.println("BOB: agreed key: " + new String(K.getEncoded()));
 			
 			}else throw new Exception("Alice's mac didn't hold");	
 		}else throw new Exception("Alice's signature didn't hold");
-		return K;
 	}
 	
 	public  String binNumber() {
